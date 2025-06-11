@@ -1,0 +1,6 @@
+@EhsaasHub_HostAddress = http://localhost:5143
+
+GET {{EhsaasHub_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
