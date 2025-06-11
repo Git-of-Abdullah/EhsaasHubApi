@@ -13,7 +13,7 @@ obj/
 publish/
 
 # Ignore appsettings secrets
-appsettings.*.json
+
 .env
 
 # Ignore logs and temporary files
