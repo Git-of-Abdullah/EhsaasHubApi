@@ -13,5 +13,8 @@
         public string Password { get; set; }
         public string Otp { get; set; }
 
+
+        public OrganizationDto Organization { get; set; }
+
     }
 }

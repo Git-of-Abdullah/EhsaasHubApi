@@ -1,4 +1,5 @@
-﻿using EhsaasHub.Models.AuthModels;
+﻿using EhsaasHub.Data;
+using EhsaasHub.Models.AuthModels;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +17,14 @@ namespace EhsaasHub.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
         private static Dictionary<string, string> _otpStore;
+        private readonly ApplicationDbContext _context;
 
         //constructor for Dependency Injection
-        public SignupController(UserManager<ApplicationUser> userManager, IConfiguration config)
+        public SignupController(UserManager<ApplicationUser> userManager, IConfiguration config, ApplicationDbContext context )
         {
             _config = config;
             _userManager = userManager;
+            _context = context;
         }
         [HttpPost("sendOtp")]
         public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request)
@@ -107,6 +110,91 @@ namespace EhsaasHub.Controllers
 
             
         }
+
+        [HttpPost("verifyotp/Organization/register")]
+        public async Task<IActionResult> RegisterOrganization([FromBody] RegisterRequest request)
+        {
+
+            //1. check if the user lready exists (phone)
+            var userExists = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.Phone);
+            if (userExists != null)
+            {
+                return BadRequest("Organization Already Exists");
+            }
+            // 2. Check if email already exists
+            var userExistsByEmail = await _userManager.FindByEmailAsync(request.Email);
+            if (userExistsByEmail != null)
+            {
+                return BadRequest("An Organization with this email already exists.");
+            }
+
+            // 3. Check if CNIC already exists
+            var userExistsByCnic = await _userManager.Users
+                .FirstOrDefaultAsync(u => u.CNIC == request.CNIC);
+            if (userExistsByCnic != null)
+            {
+                return BadRequest("An Organization with this CNIC already exists.");
+            }
+            //verify otp
+            if (!_otpStore.ContainsKey(request.Phone) || _otpStore[request.Phone] != request.Otp)
+                return BadRequest("Invalid or expired OTP.");
+
+            //create app user
+            var user = new ApplicationUser
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                PhoneNumber = request.Phone,
+                FullName = request.FullName,
+                CNIC = request.CNIC,
+                Location = request.Location,
+                Role = request.Role,
+                LanguagePreference = request.LanguagePreference,
+                ProfileImageUrl = request.ProfileImageUrl
+            };
+
+
+            
+            var result = await _userManager.CreateAsync(user, request.Password);
+            if (!result.Succeeded)
+            {
+                return BadRequest("Failed To Create Usser");
+            }
+
+            //claim addition
+            await _userManager.AddClaimAsync(user, new Claim("role", request.Role));
+
+            //save organization in db
+            var orgProfile = new OrganizationProfile
+            {
+                UserId = user.Id, 
+                OrganizationName = request.Organization.OrganizationName,
+                ServiceDetails = request.Organization.ServiceDetails,
+                RegistrationProofUrl = request.Organization.RegistrationProofUrl
+            };
+
+            _context.OrganizationProfiles.Add(orgProfile);
+            await _context.SaveChangesAsync();
+
+            //JWT issueance
+            var token = GenerateJwtToken(user);
+
+            // Remove OTP from store
+            _otpStore.Remove(request.Phone);
+
+            return Ok(new
+            {
+                token,
+                user = new { user.FullName, user.Email, user.Role }
+            });
+
+
+
+        }
+
+
+
+
         //JWT Generator
         private string GenerateJwtToken(ApplicationUser user)
         {
