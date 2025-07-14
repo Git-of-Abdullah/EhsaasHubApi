@@ -1,5 +1,7 @@
 using EhsaasHub.Data;
 using EhsaasHub.Models.AuthModels;
+using EhsaasHub.Repositories.Donation;
+using EhsaasHub.Repositories.HR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -77,6 +79,12 @@ builder.Services.AddAuthentication(options =>
 
 
 // Add services to the container.
+
+
+builder.Services.AddScoped<IDonationReceivedRepository, DonationReceivedRepository>();
+builder.Services.AddScoped<IDonationGivenRepository, DonationGivenRepository>();
+builder.Services.AddScoped<IStaffMemberRepository, StaffMemberRepository>();
+builder.Services.AddScoped<ISalaryRecordRepository, SalaryRecordRepository>();
 
 
 

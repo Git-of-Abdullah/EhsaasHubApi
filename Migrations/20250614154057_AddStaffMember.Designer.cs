@@ -4,6 +4,7 @@ using EhsaasHub.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EhsaasHub.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250614154057_AddStaffMember")]
+    partial class AddStaffMember
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -210,40 +213,7 @@ namespace EhsaasHub.Migrations
                     b.ToTable("DonationsReceived");
                 });
 
-            modelBuilder.Entity("EhsaasHub.Models.ERP.HR.SalaryRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("PaidOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("SalaryMonth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("StaffMemberId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StaffMemberId");
-
-                    b.ToTable("SalaryRecords");
-                });
-
-            modelBuilder.Entity("EhsaasHub.Models.ERP.HR.StaffMember", b =>
+            modelBuilder.Entity("EhsaasHub.Models.ERP.StaffMember", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -423,17 +393,6 @@ namespace EhsaasHub.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("EhsaasHub.Models.ERP.HR.SalaryRecord", b =>
-                {
-                    b.HasOne("EhsaasHub.Models.ERP.HR.StaffMember", "StaffMember")
-                        .WithMany()
-                        .HasForeignKey("StaffMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("StaffMember");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
